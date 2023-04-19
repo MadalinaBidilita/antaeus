@@ -66,6 +66,8 @@ fun main() {
         invoiceService = invoiceService
     )
 
+    BillingScheduler(billingService).start()
+
     // Create REST web service
     AntaeusRest(
         invoiceService = invoiceService,
