@@ -23,7 +23,7 @@ fun Project.kotlinProject() {
         // JUnit 5
         "testImplementation"("org.junit.jupiter:junit-jupiter-api:$junitVersion")
         "testImplementation"("org.junit.jupiter:junit-jupiter-params:$junitVersion")
-        "runtime"("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
+        "testRuntimeOnly"("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     }
 }
 
@@ -32,7 +32,10 @@ fun Project.kotlinProject() {
  */
 fun Project.dataLibs() {
     dependencies {
-        "implementation"("org.jetbrains.exposed:exposed:0.17.7")
+        "implementation"("org.jetbrains.exposed", "exposed-core", "0.40.1")
+        "implementation"("org.jetbrains.exposed", "exposed-dao", "0.40.1")
+        "implementation"("org.jetbrains.exposed", "exposed-jdbc", "0.40.1")
+        "implementation"("org.jetbrains.exposed", "exposed-java-time", "0.40.1")
         "implementation"("org.xerial:sqlite-jdbc:3.30.1")
     }
 }

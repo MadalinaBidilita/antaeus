@@ -1,4 +1,3 @@
-
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Currency
@@ -6,7 +5,9 @@ import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
 import java.math.BigDecimal
+import java.time.LocalDate
 import kotlin.random.Random
+
 
 // This will create all schemas and setup initial data
 internal fun setupInitialData(dal: AntaeusDal) {
@@ -18,13 +19,16 @@ internal fun setupInitialData(dal: AntaeusDal) {
 
     customers.forEach { customer ->
         (1..10).forEach {
+            val today: LocalDate = LocalDate.now()
             dal.createInvoice(
                 amount = Money(
                     value = BigDecimal(Random.nextDouble(10.0, 500.0)),
                     currency = customer.currency
                 ),
                 customer = customer,
-                status = if (it == 1) InvoiceStatus.PENDING else InvoiceStatus.PAID
+                status = if (it == 1) InvoiceStatus.PENDING else InvoiceStatus.PAID,
+                dueDate = if (it == 1) today.withMonth(today.monthValue + 1).withDayOfMonth(1)
+                else today.withDayOfMonth(1)
             )
         }
     }
@@ -34,7 +38,7 @@ internal fun setupInitialData(dal: AntaeusDal) {
 internal fun getPaymentProvider(): PaymentProvider {
     return object : PaymentProvider {
         override fun charge(invoice: Invoice): Boolean {
-                return Random.nextBoolean()
+            return Random.nextBoolean()
         }
     }
 }
