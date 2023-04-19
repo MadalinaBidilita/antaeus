@@ -96,3 +96,46 @@ The code given is structured as follows. Feel free however to modify the structu
 * [Sqlite3](https://sqlite.org/index.html) - Database storage engine
 
 Happy hacking 😁!
+
+------
+
+### My thought process
+
+Here is a list of questions I had and the assumptions I made to come up with a solution:
+
+**Q: When are the invoices created?**
+
+A: I'll assume a separate service / recurring job creates them. Therefore, we could have the following:
+ - one scheduled job that creates `PENDING` invoices with the desired due date (1st day of the month in this case)
+ - one daily scheduled job that charges all `PENDING` invoices with due_date <= execution_date.
+
+**Q: What is the best time to start the billing scheduler? Should the invoices be charged on the 1st of the month in the client's time zone or in the server's timezone?**
+
+A: I'll assume client timezone here. If I were a customer, I would expect the payment to be charged precisely on the first day and not on last day of previous month.
+If pleo operates in Europe there only 3 time zones available
+- there is time overlap between 1:00 - 22:00 (Europe/Berlin)
+- a scheduled job could start charging the invoices at 2:00 a.m
+
+**Q: What should happen if the balance is insufficient to cover the invoice?**
+
+A: It would be nice to attempt again, let's say 2 more times, on 2nd and 3rd day of the month, notifying the customer. 
+If still not successful, the invoice could be marked as OVERDUE and handled with a separate process.
+
+**Q: What should happen if payments fail because of `NetworkException` ?**
+
+A: Payment provider might be down, case eligible for retry.
+
+**Q: What should happen if payments fail because of `CurrencyMismatchException` or `CustomerNotFoundException` ?**
+A: These cases could be logged in a history for manual investigation.
+
+### Covered
+- Implemented the BillingScheduler and BillingService, assuming invoice are created in advance by a different process, 
+with the 1st day of the month as due_date
+- Keep a history of all transactions, both successful or not
+- If the payment providers fails due to low balance, the charging is attempted 2 more times.
+
+### Things to improve
+- Introduce retry mechanism in case of `NetworkException`. 
+- If the service is running in multiple instances, the scheduler should:
+   - ensure it runs only on one instance Ex: https://www.springcloud.io/post/2022-07/shedlock/#gsc.tab=0
+   - or deploy it separately and call an REST API endpoint
